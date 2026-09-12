@@ -5,6 +5,7 @@ class AuthController
 {
     public function loginForm(): void
     {
+        // Fitur login - halaman login sistem akademik
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
