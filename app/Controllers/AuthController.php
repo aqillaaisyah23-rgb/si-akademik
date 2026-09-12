@@ -16,7 +16,7 @@ class AuthController
             echo "<div style='padding:10px;background:#f8d7da;color:#721c24;margin-bottom:10px;'>$flash</div>";
         }
 
-         echo '<h1>Login Sistem Akademik</h1>';
+         echo '<h1>Portal Akademik SI</h1>';
 
         echo '
             <form method="POST" action="' . BASE_PATH . '/login">
