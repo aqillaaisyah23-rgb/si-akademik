@@ -103,4 +103,20 @@ class MahasiswaRepository
         $stmt = $this->pdo->prepare("DELETE FROM mahasiswa WHERE id = :id");
         $stmt->execute(['id' => $id]);
     }
+
+    public function existsByNim(string $nim, ?int $excludeId = null): bool
+{
+    $sql = "SELECT COUNT(*) FROM mahasiswa WHERE nim = :nim";
+    $params = ['nim' => $nim];
+
+    if ($excludeId !== null) {
+        $sql .= " AND id != :id";
+        $params['id'] = $excludeId;
+    }
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute($params);
+
+    return (int) $stmt->fetchColumn() > 0;
+}
 }

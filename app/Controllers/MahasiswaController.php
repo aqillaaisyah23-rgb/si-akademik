@@ -4,28 +4,22 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Database;
-use App\Models\Mahasiswa;
 use App\Repositories\MahasiswaRepository;
 use App\Repositories\ProdiRepository;
-use InvalidArgumentException;
+use App\Services\MahasiswaService;
 
-/**
- * Acara 10 - Inheritance & Repository Pattern
- *
- * MahasiswaController extends Controller (BaseController) sehingga
- * mewarisi method view(), redirect(), dan flash(). Seluruh akses data
- * dilakukan lewat MahasiswaRepository, tidak ada query SQL di sini.
- */
 class MahasiswaController extends Controller
 {
     private MahasiswaRepository $repo;
     private ProdiRepository $prodiRepo;
+    private MahasiswaService $service;
 
     public function __construct()
     {
         $pdo = Database::getInstance();
         $this->repo = new MahasiswaRepository($pdo);
         $this->prodiRepo = new ProdiRepository($pdo);
+        $this->service = new MahasiswaService($this->repo, $this->prodiRepo);
     }
 
     public function index(): void
@@ -48,24 +42,33 @@ class MahasiswaController extends Controller
 
     public function store(): void
     {
-        try {
-            $mhs = new Mahasiswa();
-            $mhs->setNim($_POST['nim'] ?? '');
-            $mhs->setNama($_POST['nama'] ?? '');
-            $mhs->setEmail($_POST['email'] ?? '');
-            $mhs->setProdiId((int) ($_POST['prodi_id'] ?? 0));
-            $mhs->setAngkatan((int) ($_POST['angkatan'] ?? 0));
-            $mhs->setStatus($_POST['status'] ?? 'aktif');
+        $result = $this->service->create($_POST);
 
-            $this->repo->create($mhs);
+        if ($result['success']) {
             $this->flash('success', 'Mahasiswa berhasil ditambahkan.');
             $this->redirect('/mahasiswa');
-        } catch (InvalidArgumentException $e) {
-            $this->flash('error', $e->getMessage());
-            $this->redirect('/mahasiswa/create');
+            return;
         }
+
+        $this->flash('error', implode(', ', $result['errors']));
+        $this->redirect('/mahasiswa/create');
     }
 
+    public function update(string $id): void
+    {
+        $result = $this->service->update((int) $id, $_POST);
+
+        if ($result['success']) {
+            $this->flash('success', 'Mahasiswa berhasil diperbarui.');
+            $this->redirect('/mahasiswa');
+            return;
+        }
+
+        $this->flash('error', implode(', ', $result['errors']));
+        $this->redirect('/mahasiswa/' . $id . '/edit');
+    }
+
+}
     // TUGAS MANDIRI - lihat detail satu mahasiswa
     public function show(int $id): void
     {
@@ -101,25 +104,6 @@ class MahasiswaController extends Controller
         ]);
     }
 
-    public function update(string $id): void
-    {
-        try {
-            $mhs = new Mahasiswa();
-            $mhs->setNim($_POST['nim'] ?? '');
-            $mhs->setNama($_POST['nama'] ?? '');
-            $mhs->setEmail($_POST['email'] ?? '');
-            $mhs->setProdiId((int) ($_POST['prodi_id'] ?? 0));
-            $mhs->setAngkatan((int) ($_POST['angkatan'] ?? 0));
-            $mhs->setStatus($_POST['status'] ?? 'aktif');
-
-            $this->repo->update((int) $id, $mhs);
-            $this->flash('success', 'Mahasiswa berhasil diperbarui.');
-            $this->redirect('/mahasiswa');
-        } catch (InvalidArgumentException $e) {
-            $this->flash('error', $e->getMessage());
-            $this->redirect('/mahasiswa/' . $id . '/edit');
-        }
-    }
 
     public function destroy(string $id): void
     {
